@@ -5,11 +5,19 @@ pub const Rect = struct {
     width: f32,
     height: f32,
     color: [4]f32,
+
+    pub fn initZero() Rect {
+        return Rect{ .pos = Vec2{ .x = 0, .y = 0 }, .width = 0, .height = 0, .color = [_]f32{0.0} ** 4 };
+    }
 };
 
 pub const Vec2 = struct {
     x: f32,
     y: f32,
+
+    pub fn initZero() Vec2 {
+        return Vec2{ .x = 0, .y = 0 };
+    }
 
     pub fn add(a: *Vec2, b: Vec2) void {
         return Vec2{ .x = a.x + b.x, .y = a.y + b.y };

@@ -6,6 +6,8 @@ const util = @import("../util.zig");
 const math = @import("../utils/math.zig");
 const Rect = math.Rect;
 
+const MaxElements = @import("ezui.zig").MaxElements;
+
 const SwapChainFormat = gpu.Texture.Format.bgra8_unorm;
 
 pub const Renderer = struct {
@@ -75,10 +77,9 @@ pub const Renderer = struct {
 
         const swapchain = device.?.createSwapChain(surface, &swapchain_desc);
 
-        // TODO: Un-hardcode size
         const rect_buffer = device.?.createBuffer(&.{
             .usage = .{ .storage = true, .copy_dst = true },
-            .size = @sizeOf(Rect) * 500,
+            .size = @sizeOf(Rect) * MaxElements,
         });
 
         const vs =
@@ -165,11 +166,10 @@ pub const Renderer = struct {
 
         const pipeline = device.?.createRenderPipeline(&pipeline_descriptor);
 
-        // TODO: Remove harcoded 500 value
         const bind_group = device.?.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
             .layout = pipeline.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, rect_buffer, 0, @sizeOf(Rect) * 500),
+                gpu.BindGroup.Entry.buffer(0, rect_buffer, 0, @sizeOf(Rect) * MaxElements),
             },
         }));
 
@@ -191,6 +191,7 @@ pub const Renderer = struct {
     pub fn resizeSwapchain(renderer: *Renderer, width: u32, height: u32) void {
         _ = renderer;
         std.log.info("hi!!!, w:{d}, h:{d}\n", .{ width, height });
+        // TODO: Do something about re-sizing
         // renderer.swapchain_desc.width = width;
         // renderer.swapchain_desc.height = height;
         // renderer.swapchain.release();

@@ -7,7 +7,7 @@ const math = @import("../utils/math.zig");
 const Vec2 = math.Vec2;
 const Rect = math.Rect;
 
-const MaxElements = 500;
+pub const MaxElements = 500;
 
 pub const EZUI = struct {
     renderer: Renderer,
@@ -18,7 +18,7 @@ pub const EZUI = struct {
     pub fn init(window: glfw.Window) EZUI {
         var renderer = Renderer.init(window);
 
-        return EZUI{ .renderer = renderer, .elements = [_]Rect{Rect{ .pos = Vec2{ .x = 0, .y = 0 }, .width = 0, .height = 0, .color = [_]f32{0.0} ** 4 }} ** MaxElements, .element_idx = 0, .cursor_pos = Vec2{ .x = 0.0, .y = 0.0 } };
+        return EZUI{ .renderer = renderer, .elements = [_]Rect{Rect.initZero()} ** MaxElements, .element_idx = 0, .cursor_pos = Vec2{ .x = 0.0, .y = 0.0 } };
     }
 
     pub fn deinit(ezui: *EZUI) void {
@@ -36,8 +36,9 @@ pub const EZUI = struct {
     }
 
     fn cursorRectIntersection(ezui: *EZUI, pos: Vec2, width: f32, height: f32) bool {
-        // TODO: Make it easier to read, by using const for ezui.cursor_pos.*
-        return ezui.cursor_pos.x >= pos.x and ezui.cursor_pos.x <= pos.x + width and ezui.cursor_pos.y >= pos.y and ezui.cursor_pos.y <= pos.y + height;
+        const c_x = ezui.cursor_pos.x;
+        const c_y = ezui.cursor_pos.y;
+        return c_x >= pos.x and c_x <= pos.x + width and c_y >= pos.y and c_y <= pos.y + height;
     }
 
     pub fn button(ezui: *EZUI, pos: Vec2, width: f32, height: f32) bool {
