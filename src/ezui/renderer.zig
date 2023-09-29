@@ -3,6 +3,9 @@ const gpu = @import("mach-gpu");
 const glfw = @import("mach-glfw");
 const util = @import("../util.zig");
 
+const math = @import("../utils/math.zig");
+const Rect = math.Rect;
+
 const SwapChainFormat = gpu.Texture.Format.bgra8_unorm;
 
 pub const Renderer = struct {
@@ -12,6 +15,8 @@ pub const Renderer = struct {
     swapchain: *gpu.SwapChain,
     swapchain_desc: gpu.SwapChain.Descriptor,
     surface: *gpu.Surface,
+    rect_buffer: *gpu.Buffer,
+    bind_group: *gpu.BindGroup,
 
     pub fn init(window: glfw.Window) Renderer {
         gpu.Impl.init();
@@ -70,23 +75,69 @@ pub const Renderer = struct {
 
         const swapchain = device.?.createSwapChain(surface, &swapchain_desc);
 
+        // TODO: Un-hardcode size
+        const rect_buffer = device.?.createBuffer(&.{
+            .usage = .{ .storage = true, .copy_dst = true },
+            .size = @sizeOf(Rect) * 500,
+        });
+
         const vs =
+            \\ struct Rect {
+            \\  pos: vec2<f32>,
+            \\  width: f32,
+            \\  height: f32,
+            \\  color: vec4<f32>,
+            \\ }
+            \\
+            \\ struct VertexOutput{
+            \\  @builtin(position) Position: vec4<f32>,
+            \\  @location(0) color: vec4<f32>,
+            \\ }
+            \\
+            \\ @group(0) @binding(0) var<storage, read> rects: array<Rect>;
+            \\
             \\ @vertex fn main(
             \\     @builtin(vertex_index) VertexIndex : u32
-            \\ ) -> @builtin(position) vec4<f32> {
-            \\     var pos = array<vec2<f32>, 3>(
-            \\         vec2<f32>( 0.0,  0.5),
-            \\         vec2<f32>(-0.5, -0.5),
-            \\         vec2<f32>( 0.5, -0.5)
+            \\ ) -> VertexOutput{
+            \\
+            \\      var out: VertexOutput;
+            \\     
+            \\     var rect = rects[VertexIndex / 6];
+            \\     var positions = array<vec2<f32>, 6>(
+            \\        vec2<f32>(0.0, 0.0), // bottom-left
+            \\        vec2<f32>(0.0, 1.0), // top-left
+            \\        vec2<f32>(1.0, 0.0), // bottom-right
+            \\        vec2<f32>(1.0, 0.0), // bottom-right
+            \\        vec2<f32>(0.0, 1.0), // top-left
+            \\        vec2<f32>(1.0, 1.0), // top-right
             \\     );
-            \\     return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+            \\     var pos = positions[VertexIndex % 6];
+            \\     // TODO: HOW DOES THIS WORK?
+            \\     pos.x *= rect.width;
+            \\     pos.y *= rect.height;
+            \\     pos.x += rect.pos.x;
+            \\     pos.y += rect.pos.y;
+            \\     // Raster -> NDC
+            \\     // TODO: Remove hardcoded 250 value
+            \\     pos.x = pos.x / 250 - 1.0;
+            \\     pos.y = 1.0 - pos.y / 250;
+            \\
+            \\     out.Position = vec4<f32>(pos.x, pos.y, 0.0, 1.0);
+            \\     out.color = rect.color;
+            \\     return out;
             \\ }
         ;
         const vs_module = device.?.createShaderModuleWGSL("my vertex shader", vs);
 
         const fs =
-            \\ @fragment fn main() -> @location(0) vec4<f32> {
-            \\     return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+            \\
+            \\ struct VertexInput{
+            \\  @builtin(position) Position: vec4<f32>,
+            \\  @location(0) color: vec4<f32>,
+            \\ }
+            \\
+            \\ @fragment fn main(vi: VertexInput) -> @location(0) vec4<f32> {
+            \\     return vi.color;
             \\ }
         ;
         const fs_module = device.?.createShaderModuleWGSL("my fragment shader", fs);
@@ -114,6 +165,14 @@ pub const Renderer = struct {
 
         const pipeline = device.?.createRenderPipeline(&pipeline_descriptor);
 
+        // TODO: Remove harcoded 500 value
+        const bind_group = device.?.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
+            .layout = pipeline.getBindGroupLayout(0),
+            .entries = &.{
+                gpu.BindGroup.Entry.buffer(0, rect_buffer, 0, @sizeOf(Rect) * 500),
+            },
+        }));
+
         vs_module.release();
         fs_module.release();
 
@@ -124,6 +183,8 @@ pub const Renderer = struct {
             .swapchain = swapchain,
             .swapchain_desc = swapchain_desc,
             .surface = surface,
+            .rect_buffer = rect_buffer,
+            .bind_group = bind_group,
         };
     }
 
@@ -136,8 +197,11 @@ pub const Renderer = struct {
         // renderer.swapchain = renderer.device.createSwapChain(renderer.surface, &renderer.swapchain_desc);
     }
 
-    pub fn render(renderer: *Renderer) void {
+    pub fn render(renderer: *Renderer, rects: []Rect) void {
         renderer.device.tick();
+
+        renderer.queue.writeBuffer(renderer.rect_buffer, 0, rects);
+
         const backbuffer_view = renderer.swapchain.getCurrentTextureView().?;
         const color_attachment = gpu.RenderPassColorAttachment{
             .view = backbuffer_view,
@@ -152,7 +216,8 @@ pub const Renderer = struct {
         });
         const pass = encoder.beginRenderPass(&render_pass_info);
         pass.setPipeline(renderer.pipeline);
-        pass.draw(3, 1, 0, 0);
+        pass.setBindGroup(0, renderer.bind_group, &.{});
+        pass.draw(@intCast(rects.len * 6), 1, 0, 0);
         pass.end();
         pass.release();
 
@@ -166,6 +231,7 @@ pub const Renderer = struct {
     }
 
     pub fn deinit(renderer: *Renderer) void {
-        _ = renderer;
+        renderer.bind_group.release();
+        renderer.rect_buffer.release();
     }
 };
