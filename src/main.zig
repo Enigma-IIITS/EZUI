@@ -33,7 +33,7 @@ pub fn main() !void {
     const backend_type = detectBackendType();
     var hints = util.glfwWindowHintsForBackend(backend_type);
     hints.cocoa_retina_framebuffer = true;
-    const window = glfw.Window.create(500, 500, "EZUI!", null, null, hints) orelse {
+    const window = glfw.Window.create(1080, 720, "EZUI!", null, null, hints) orelse {
         std.log.err("failed to create GLFW window: {?s}", .{glfw.getErrorString()});
         std.process.exit(1);
     };
@@ -55,18 +55,33 @@ pub fn main() !void {
         const mouse_pos = window.getCursorPos();
         ezui.setCursorPos(@floatCast(mouse_pos.xpos), @floatCast(mouse_pos.ypos));
 
-        if (ezui.button(Vec2{ .x = 100, .y = 100 }, 50, 50)) {
+        ezui.window(Vec2{ .x = 50, .y = 50 }, 200, 500);
+
+        if (ezui.button()) {
             std.log.info("mouse is over button 1", .{});
+            if (ezui.button()) {
+                std.log.info("mouse is over button 2", .{});
+            }
         }
-        if (ezui.button(Vec2{ .x = 100, .y = 200 }, 50, 50)) {
-            std.log.info("mouse is over button 2", .{});
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+
+        ezui.window(Vec2{ .x = 400, .y = 50 }, 200, 500);
+
+        if (ezui.button()) {
+            std.log.info("mouse is over button 1", .{});
+            if (ezui.button()) {
+                std.log.info("mouse is over button 2", .{});
+            }
         }
-        if (ezui.button(Vec2{ .x = 200, .y = 100 }, 50, 50)) {
-            std.log.info("mouse is over button 3", .{});
-        }
-        if (ezui.button(Vec2{ .x = 200, .y = 200 }, 50, 50)) {
-            std.log.info("mouse is over button 4", .{});
-        }
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+        if (ezui.button()) {}
+        if (ezui.button()) {}
         ezui.render();
     }
 }

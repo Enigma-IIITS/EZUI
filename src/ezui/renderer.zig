@@ -120,8 +120,8 @@ pub const Renderer = struct {
             \\     pos.y += rect.pos.y;
             \\     // Raster -> NDC
             \\     // TODO: Remove hardcoded 250 value
-            \\     pos.x = pos.x / 250 - 1.0;
-            \\     pos.y = 1.0 - pos.y / 250;
+            \\     pos.x = pos.x / 540 - 1.0;
+            \\     pos.y = 1.0 - pos.y / 360;
             \\
             \\     out.Position = vec4<f32>(pos.x, pos.y, 0.0, 1.0);
             \\     out.color = rect.color;
@@ -207,7 +207,7 @@ pub const Renderer = struct {
         const color_attachment = gpu.RenderPassColorAttachment{
             .view = backbuffer_view,
             .resolve_target = null,
-            .clear_value = gpu.Color{ .r = 0.0, .g = 0.0, .b = 0.0, .a = 0.0 },
+            .clear_value = gpu.Color{ .r = 1.0, .g = 1.0, .b = 1.0, .a = 0.0 },
             .load_op = .clear,
             .store_op = .store,
         };
