@@ -42,9 +42,10 @@ pub fn main() !void {
     defer window.destroy();
 
     var style = Style{
-        .window_color = Color{ .r = 0.1, .g = 0.1, .b = 0.1 },
+        .window_color = Color{ .r = 0.2, .g = 0.2, .b = 0.2 },
         .button_color = Color{ .r = 1.0, .g = 0.0, .b = 0.0 },
-        .button_hover_color = Color{ .r = 0.0, .g = 1.0, .b = 0.0 },
+        .button_hover_color = Color{ .r = 0.9, .g = 0.0, .b = 0.0 },
+        .button_click_color = Color{ .r = 0.8, .g = 0.0, .b = 0.0 },
         .indent_width = 5.0,
         .height_between_elements = 5.0,
         .element_height = 20.0,
@@ -61,6 +62,18 @@ pub fn main() !void {
         }
     }).callback);
 
+    window.setMouseButtonCallback((struct {
+        fn callback(window_: glfw.Window, button_: glfw.MouseButton, action: glfw.Action, mods: glfw.Mods) void {
+            _ = mods;
+            const pl = window_.getUserPointer(EZUI);
+            if (button_ == .left and action == .press) {
+                pl.?.mousePressed();
+            } else if (button_ == .left and action == .release) {
+                pl.?.mouseReleased();
+            }
+        }
+    }).callback);
+
     while (!window.shouldClose()) {
         glfw.pollEvents();
         const mouse_pos = window.getCursorPos();
@@ -68,31 +81,16 @@ pub fn main() !void {
 
         ezui.window(Vec2{ .x = 50, .y = 50 }, 200, 500);
 
-        if (ezui.button()) {
-            std.log.info("mouse is over button 1", .{});
-            if (ezui.button()) {
-                std.log.info("mouse is over button 2", .{});
-            }
+        if (ezui.button().hover) {
+            std.log.info("Button 1 hovered!", .{});
         }
-        if (ezui.button()) {}
-        if (ezui.button()) {}
-        if (ezui.button()) {}
-        if (ezui.button()) {}
-        if (ezui.button()) {}
 
         ezui.window(Vec2{ .x = 400, .y = 50 }, 200, 500);
 
-        if (ezui.button()) {
-            std.log.info("mouse is over button 1", .{});
-            if (ezui.button()) {
-                std.log.info("mouse is over button 2", .{});
-            }
+        if (ezui.button().click) {
+            std.log.info("Button 2 clicked!", .{});
         }
-        if (ezui.button()) {}
-        if (ezui.button()) {}
-        if (ezui.button()) {}
-        if (ezui.button()) {}
-        if (ezui.button()) {}
+
         ezui.render();
     }
 }

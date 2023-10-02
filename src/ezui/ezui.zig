@@ -10,12 +10,19 @@ const Rect = math.Rect;
 
 pub const MaxElements = 500;
 
+pub const Event = struct {
+    click: bool,
+    hover: bool,
+};
+
 pub const EZUI = struct {
     renderer: Renderer,
     elements: [MaxElements]Rect,
     element_idx: u32,
     window_rect: Rect,
     cursor_pos: Vec2,
+    mouse_click: bool = false,
+    mouse_down: bool = false,
     style: *Style,
 
     pub fn init(glfw_window: glfw.Window, style: *Style) EZUI {
@@ -38,11 +45,21 @@ pub const EZUI = struct {
     pub fn render(ezui: *EZUI) void {
         ezui.renderer.render(ezui.elements[0..ezui.element_idx]);
         ezui.element_idx = 0;
+        ezui.mouse_click = false;
     }
 
     pub fn setCursorPos(ezui: *EZUI, x: f32, y: f32) void {
         ezui.cursor_pos.x = x;
         ezui.cursor_pos.y = y;
+    }
+
+    pub fn mousePressed(ezui: *EZUI) void {
+        ezui.mouse_click = true;
+        ezui.mouse_down = true;
+    }
+
+    pub fn mouseReleased(ezui: *EZUI) void {
+        ezui.mouse_down = false;
     }
 
     fn cursorRectIntersection(ezui: *EZUI, pos: Vec2, width: f32, height: f32) bool {
@@ -63,7 +80,7 @@ pub const EZUI = struct {
         ezui.window_rect.height = height;
     }
 
-    pub fn button(ezui: *EZUI) bool {
+    pub fn button(ezui: *EZUI) Event {
         const window_rect_x = ezui.window_rect.pos.x;
         const window_rect_y = ezui.window_rect.pos.y;
         const window_rect_width = ezui.window_rect.width;
@@ -79,11 +96,15 @@ pub const EZUI = struct {
         ezui.elements[ezui.element_idx].width = width;
         ezui.elements[ezui.element_idx].height = height;
         if (isHover) {
-            ezui.elements[ezui.element_idx].color = ezui.style.button_hover_color;
+            if (ezui.mouse_down) {
+                ezui.elements[ezui.element_idx].color = ezui.style.button_click_color;
+            } else {
+                ezui.elements[ezui.element_idx].color = ezui.style.button_hover_color;
+            }
         }
         ezui.element_idx += 1;
         ezui.window_rect.pos.y = pos.y + height;
-        return isHover;
+        return Event{ .hover = isHover, .click = isHover and ezui.mouse_click };
     }
 
     pub fn resize(ezui: *EZUI, width: u32, height: u32) void {
