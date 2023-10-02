@@ -23,10 +23,10 @@ pub const EZUI = struct {
 
         return EZUI{
             .renderer = renderer,
-            .elements = [_]Rect{Rect.initZero()} ** MaxElements,
+            .elements = [_]Rect{.{}} ** MaxElements,
             .element_idx = 0,
-            .cursor_pos = Vec2{ .x = 0.0, .y = 0.0 },
-            .window_rect = Rect.initZero(),
+            .cursor_pos = .{},
+            .window_rect = .{},
             .style = style,
         };
     }
