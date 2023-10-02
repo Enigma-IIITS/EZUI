@@ -87,12 +87,12 @@ pub const Renderer = struct {
             \\  pos: vec2<f32>,
             \\  width: f32,
             \\  height: f32,
-            \\  color: vec4<f32>,
+            \\  color: vec3<f32>,
             \\ }
             \\
             \\ struct VertexOutput{
             \\  @builtin(position) Position: vec4<f32>,
-            \\  @location(0) color: vec4<f32>,
+            \\  @location(0) color: vec3<f32>,
             \\ }
             \\
             \\ @group(0) @binding(0) var<storage, read> rects: array<Rect>;
@@ -134,11 +134,11 @@ pub const Renderer = struct {
             \\
             \\ struct VertexInput{
             \\  @builtin(position) Position: vec4<f32>,
-            \\  @location(0) color: vec4<f32>,
+            \\  @location(0) color: vec3<f32>,
             \\ }
             \\
             \\ @fragment fn main(vi: VertexInput) -> @location(0) vec4<f32> {
-            \\     return vi.color;
+            \\     return vec4<f32>(vi.color, 1.0);
             \\ }
         ;
         const fs_module = device.?.createShaderModuleWGSL("my fragment shader", fs);
@@ -207,7 +207,7 @@ pub const Renderer = struct {
         const color_attachment = gpu.RenderPassColorAttachment{
             .view = backbuffer_view,
             .resolve_target = null,
-            .clear_value = gpu.Color{ .r = 1.0, .g = 1.0, .b = 1.0, .a = 0.0 },
+            .clear_value = gpu.Color{ .r = 1.0, .g = 1.0, .b = 1.0, .a = 1.0 },
             .load_op = .clear,
             .store_op = .store,
         };

@@ -1,17 +1,25 @@
 const std = @import("std");
 
-pub const Rect = struct {
+// TODO: Maybe don't pack struct here
+
+pub const Color = packed struct {
+    r: f32,
+    g: f32,
+    b: f32,
+};
+
+pub const Rect = packed struct {
     pos: Vec2,
     width: f32,
     height: f32,
-    color: [4]f32,
+    color: Color,
 
     pub fn initZero() Rect {
-        return Rect{ .pos = Vec2{ .x = 0, .y = 0 }, .width = 0, .height = 0, .color = [_]f32{0.0} ** 4 };
+        return Rect{ .pos = Vec2{ .x = 0, .y = 0 }, .width = 0, .height = 0, .color = Color{ .r = 0.0, .g = 0.0, .b = 0.0 } };
     }
 };
 
-pub const Vec2 = struct {
+pub const Vec2 = packed struct {
     x: f32,
     y: f32,
 

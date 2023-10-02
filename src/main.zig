@@ -5,8 +5,10 @@ const glfw = @import("mach-glfw");
 const gpu = @import("mach-gpu");
 const util = @import("util.zig");
 const EZUI = @import("ezui/ezui.zig").EZUI;
+const Style = @import("ezui/style.zig").Style;
 const math = @import("utils/math.zig");
 const Vec2 = math.Vec2;
+const Color = math.Color;
 
 pub const GPUInterface = gpu.dawn.Interface;
 
@@ -39,7 +41,16 @@ pub fn main() !void {
     };
     defer window.destroy();
 
-    var ezui = EZUI.init(window);
+    var style = Style{
+        .window_color = Color{ .r = 0.1, .g = 0.1, .b = 0.1 },
+        .button_color = Color{ .r = 1.0, .g = 0.0, .b = 0.0 },
+        .button_hover_color = Color{ .r = 0.0, .g = 1.0, .b = 0.0 },
+        .indent_width = 5.0,
+        .height_between_elements = 5.0,
+        .element_height = 20.0,
+    };
+
+    var ezui = EZUI.init(window, &style);
     defer ezui.deinit();
 
     window.setUserPointer(&ezui);
